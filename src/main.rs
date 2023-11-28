@@ -56,19 +56,10 @@ pub struct State {
     mongo : Client
 }
 
-
-#[get("/")]
-pub async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-pub async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-pub async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+#[derive(Serialize, Deserialize)]
+pub struct PrefixURLHandler {
+    guild_id: String,
+    prefix: String
 }
 
 #[get("/callback")]
@@ -97,7 +88,7 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
         .expect("failed to get response")
         .json::<User>()
         .await
-        .expect("failed to get payload");
+        .expect("failed to get user payload");
 
     let guilds_list = 
         request.get("https://discord.com/api/users/@me/guilds")
@@ -107,7 +98,7 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
         .expect("failed to get response")
         .json::<Vec<Guild>>()
         .await
-        .expect("failed to get payload");
+        .expect("failed to get guild payload");
 
     // insert into MongoDB if doesn't exist, update if anything is different
     /*
@@ -197,6 +188,14 @@ pub async fn authenticate(data: web::Data<State>) -> impl Responder {
     Redirect::to(redirect_url)
 }
 
+#[post("/api/{guild_id}/{prefix}")]
+pub async fn prefix(data: web::Data<State>, path_var: web::Path<PrefixURLHandler>) -> impl Responder {
+
+    // future impl mongodb update query and handler if no cookie
+
+    HttpResponse::Ok().body(format!("{} {}", &path_var.guild_id, &path_var.prefix))
+}
+
 
 //#[actix_web::main]
 #[tokio::main]
@@ -213,11 +212,9 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(state.clone()))
-            .service(hello)
             .service(authenticate)
-            .service(echo)
             .service(callback)
-            .route("/hey", web::get().to(manual_hello))
+            .service(prefix)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
