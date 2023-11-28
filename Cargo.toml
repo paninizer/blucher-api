@@ -1,0 +1,20 @@
+[package]
+name = "web-test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "^4"
+mongodb = "^2.1"
+bson = { version = "^2", features = ["chrono-0_4"] } # Needed for using chrono datetime in doc
+tokio = { version = "^1", features = ["macros", "rt-multi-thread"] }
+chrono = "^0.4" # Used for setting DateTimes
+serde = "^1" # Used in the Map Data into Structs section, Serialize & Deserialize
+oauth2 = "^4.4.2" # OAuth2 for Discord
+anyhow = "^1.0.75" # Any errors for Result returning
+url = "^2.4.1" # url
+reqwest = { version = "^0.11.22", features = ["json"] } # Request
+dotenv = "^0.15.0" # for manipulating env file
+futures = "^0.3"
