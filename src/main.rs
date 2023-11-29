@@ -2,6 +2,7 @@ mod helper;
 
 use actix_web::web::Redirect;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 
 use bson::Document;
 //use actix_web::http::StatusCode;
@@ -166,6 +167,9 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
     }
 
 
+    // set cookies
+
+
     HttpResponse::Ok().body("request success")
 }
 
@@ -202,6 +206,9 @@ pub async fn prefix(data: web::Data<State>, path_var: web::Path<PrefixURLHandler
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
+    
+    let session_key = helper::helper::get_session_key().await.expect("Missing session key.");
+
     let state = State { 
         client: helper::helper::client_create().unwrap(),
         request : reqwest::Client::new(),
@@ -211,6 +218,10 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
 
         App::new()
+            .wrap(SessionMiddleware::new(
+                CookieSessionStore::default(),
+                session_key.clone()
+            ))
             .app_data(web::Data::new(state.clone()))
             .service(authenticate)
             .service(callback)

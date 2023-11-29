@@ -14,6 +14,8 @@ pub mod helper {
     use mongodb::{Client, options::{ClientOptions, ResolverConfig}};
     use std::env;
 
+    use actix_web::cookie::Key;
+
     pub fn client_create() -> Result<BasicClient, anyhow::Error> {
         let client =
         BasicClient::new(
@@ -48,5 +50,12 @@ pub mod helper {
         }
 
         Ok( client )
+    }
+
+    pub async fn get_session_key() -> Result<Key, anyhow::Error> {
+
+        let key = Key::generate();
+
+        Ok( key ) 
     }
 }
