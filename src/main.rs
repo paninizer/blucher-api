@@ -1,7 +1,10 @@
 mod helper;
 
+use actix_cors::Cors;
+use actix_session::config::PersistentSession;
+use actix_web::http;
 use actix_web::web::Redirect;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, cookie::time};
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 
 use bson::Document;
@@ -140,8 +143,6 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
 
                 None
             ).await.expect("Did not update successfully");
-
-
         },
         None => {
             let doc_ins = UserDoc {
@@ -161,12 +162,10 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
                 bson::from_bson::<Document>(bson_obj).unwrap(),
                 None
             ).await.expect("Did not create new user successfully");
-
             // println!("A document with the ID {} has been created.", insert_res.inserted_id)
         }
     }
-
-
+    
     // set cookies
 
 
@@ -217,11 +216,32 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
 
+        let cors = Cors::default()
+            .allowed_origin("https://dashboard-client.panzer-chan.repl.co")
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .supports_credentials()
+            .max_age(60*60*24); // one day max age 
+
+
         App::new()
-            .wrap(SessionMiddleware::new(
-                CookieSessionStore::default(),
-                session_key.clone()
-            ))
+            .wrap(SessionMiddleware::builder
+                (
+                    CookieSessionStore::default(),
+                    session_key.clone()
+                )
+                .cookie_name("user".to_string())
+                .cookie_http_only(true)
+                .cookie_same_site(actix_web::cookie::SameSite::None)
+                .cookie_secure(true)
+                .session_lifecycle( 
+                    PersistentSession::default()
+                    .session_ttl(time::Duration::days(1))
+                )
+                .build()
+            )
+            .wrap(cors)
             .app_data(web::Data::new(state.clone()))
             .service(authenticate)
             .service(callback)
