@@ -68,6 +68,7 @@ pub struct PrefixURLHandler {
 
 #[get("/callback")]
 async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Responder {
+
     let client = &data.client;
     let request = &data.request;
     let mongo = &data.mongo;
@@ -165,8 +166,8 @@ async fn callback(info: web::Query<Info>, data: web::Data<State>) -> impl Respon
             // println!("A document with the ID {} has been created.", insert_res.inserted_id)
         }
     }
-    
-    // set cookies
+
+    // set user credentials
 
 
     HttpResponse::Ok().body("request success")
