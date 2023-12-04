@@ -65,8 +65,7 @@ pub struct State {
 
 #[derive(Serialize, Deserialize)]
 pub struct PrefixURLHandler {
-    guild_id: String,
-    prefix: String
+    guild_id: String
 }
 
 #[get("/auth/discord")]
@@ -174,7 +173,6 @@ async fn callback(params: Option<web::Query<Info>>, data: web::Data<State>, sess
             
             // set session
             // Insert user_json into cookie
-
             session.insert("user", user_json.username.clone()).unwrap();
             session.insert("user_id", user_json.id.clone()).unwrap();
             
@@ -206,16 +204,15 @@ pub async fn authenticate(data: web::Data<State>) -> impl Responder {
 
     let redirect_url = auth_url.to_string().replace("+", "%20");
     // redirect to auth_url, where the user will authenticate
-    // helper::helper::handler(auth_url).await;
     Redirect::to(redirect_url)
 }
 
-#[put("/api/guilds/{guild_id}/{prefix}")]
+#[put("/api/guilds/{guild_id}/prefix")]
 pub async fn prefix(data: web::Data<State>, path_var: web::Path<PrefixURLHandler>) -> impl Responder {
 
     // future impl mongodb update query and handler if no cookie
 
-    HttpResponse::Ok().body(format!("{} {}", &path_var.guild_id, &path_var.prefix))
+    HttpResponse::Ok().body(format!("{}", &path_var.guild_id))
 }
 
 #[get("/api/guilds")]
