@@ -258,7 +258,7 @@ async fn main() -> std::io::Result<()> {
 
         let cors = Cors::default()
             .allowed_origin("https://dashboard-client.panzer-chan.repl.co")
-            .allowed_methods(vec!["GET", "POST"])
+            .allowed_methods(vec!["GET", "PUT", "POST", "DELETE"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .supports_credentials()
