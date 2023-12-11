@@ -179,6 +179,7 @@ async fn callback(params: Option<web::Query<Info>>, data: web::Data<State>, sess
             println!("Session: {:?}", session.get::<String>("user"));
             //println!("{:?}", session.get::<String>("user_id"));
             //
+            return HttpResponse::Ok().body("Authenticated!");
             //Redirect::to("https://dashboard-client.panzer-chan.repl.co/menu");
         },
         None => {
@@ -186,7 +187,7 @@ async fn callback(params: Option<web::Query<Info>>, data: web::Data<State>, sess
         } // if no params, redirect to regain authentication
     }
 
-    HttpResponse::Ok().body("Authenticated!")
+    HttpResponse::NotAcceptable().body("This is a horrible request")
 }
 
 
@@ -208,9 +209,16 @@ pub async fn authenticate(data: web::Data<State>) -> impl Responder {
 }
 
 #[put("/api/guilds/{guild_id}/prefix")]
-pub async fn prefix(data: web::Data<State>, path_var: web::Path<PrefixURLHandler>) -> impl Responder {
+pub async fn prefix(data: web::Data<State>, path_var: web::Path<PrefixURLHandler>, session: Session) -> impl Responder {
 
     // future impl mongodb update query and handler if no cookie
+
+    let guild_list = session.get::<Vec<Guild>>("guilds").unwrap();
+
+    if guild_list.is_none() {
+        return HttpResponse::NotAcceptable().body("No guilds");
+    }
+
 
     HttpResponse::Ok().body(format!("{}", &path_var.guild_id))
 }
@@ -229,7 +237,7 @@ pub async fn guilds(data: web::Data<State>, session: Session) -> impl Responder 
     let user_guilds = session.get::<Vec<Guild>>("guilds").unwrap();
 
     if user_guilds.is_none() {
-        HttpResponse::Unauthorized().body("Unauthorized");
+        return HttpResponse::Unauthorized().body("Unauthorized");
     }
 
     let mutual_guilds = bot_guilds
